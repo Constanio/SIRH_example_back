@@ -31,8 +31,21 @@ func main() {
 
 	// Configuration CORS
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	
+	// Liste des origines autorisées (On ajoute les variantes avec et sans slash)
+	config.AllowOrigins = []string{
+		"http://localhost:5173",
+		"https://sirhexamplefront.netlify.app",
+		"https://sirhexamplefront.netlify.app/",
+	}
+	
+	frontURL := os.Getenv("FRONTEND_URL")
+	if frontURL != "" {
+		config.AllowOrigins = append(config.AllowOrigins, frontURL)
+	}
+	
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"}
 	config.AllowCredentials = true
 	r.Use(cors.New(config))
 
