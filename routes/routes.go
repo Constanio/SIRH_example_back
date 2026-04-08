@@ -39,21 +39,59 @@ func Setup(r *gin.Engine) {
 			// ORGANISATION
 			protected.GET("/departements", handlers.GetDepartements)
 			protected.POST("/departements", handlers.CreateDepartement)
+			protected.PUT("/departements/:id", handlers.UpdateDepartement)
+			protected.DELETE("/departements/:id", handlers.DeleteDepartement)
 			protected.GET("/postes", handlers.GetPostes)
 			protected.POST("/postes", handlers.CreatePoste)
+			protected.PUT("/postes/:id", handlers.UpdatePoste)
+			protected.DELETE("/postes/:id", handlers.DeletePoste)
 
 			// CONGÉS
 			conges := protected.Group("/conges")
 			{
 				conges.GET("/types", handlers.GetTypesConges)
+				conges.POST("/types", middleware.RequireRoles("admin", "rh"), handlers.CreateTypeConge)
+				conges.PUT("/types/:id", middleware.RequireRoles("admin", "rh"), handlers.UpdateTypeConge)
+				conges.DELETE("/types/:id", middleware.RequireRoles("admin", "rh"), handlers.DeleteTypeConge)
 				conges.GET("/mes-demandes", handlers.GetMesDemandes)
 				conges.POST("/demande", handlers.CreateDemandeConge)
 				conges.GET("/mes-soldes", handlers.GetMesSoldes)
 				
 				// Routes RH/Manager
-				conges.GET("/toutes-les-demandes", handlers.GetAllDemandes)
-				conges.PATCH("/approuver/:id", handlers.ApprouverDemande)
-				conges.PATCH("/refuser/:id", handlers.RefuserDemande)
+				conges.GET("/toutes-les-demandes", middleware.RequireRoles("admin", "rh", "manager"), handlers.GetAllDemandes)
+				conges.PATCH("/approuver/:id", middleware.RequireRoles("admin", "rh", "manager"), handlers.ApprouverDemande)
+				conges.PATCH("/refuser/:id", middleware.RequireRoles("admin", "rh", "manager"), handlers.RefuserDemande)
+			}
+
+			// PAIE (RH/Admin)
+			paie := protected.Group("/paie")
+			paie.Use(middleware.RequireRoles("admin", "rh"))
+			{
+				paie.GET("/fiches", handlers.GetFichesPaie)
+				paie.GET("/fiches/:id", handlers.GetFichePaie)
+				paie.POST("/fiches", handlers.CreateFichePaie)
+				paie.PUT("/fiches/:id", handlers.UpdateFichePaie)
+				paie.DELETE("/fiches/:id", handlers.DeleteFichePaie)
+			}
+
+			// SALAIRES (RH/Admin)
+			salaires := protected.Group("/salaires")
+			salaires.Use(middleware.RequireRoles("admin", "rh"))
+			{
+				salaires.GET("/", handlers.GetSalaires)
+				salaires.POST("/", handlers.CreateSalaire)
+				salaires.PUT("/:id", handlers.UpdateSalaire)
+				salaires.DELETE("/:id", handlers.DeleteSalaire)
+			}
+
+			// EVALUATIONS (RH/Admin/Manager)
+			evals := protected.Group("/evaluations")
+			evals.Use(middleware.RequireRoles("admin", "rh", "manager"))
+			{
+				evals.GET("/", handlers.GetEvaluations)
+				evals.POST("/", handlers.CreateEvaluation)
+				evals.PUT("/:id", handlers.UpdateEvaluation)
+				evals.DELETE("/:id", handlers.DeleteEvaluation)
 			}
 		}
 
